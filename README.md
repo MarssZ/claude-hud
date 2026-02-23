@@ -1,175 +1,211 @@
-# Claude HUD
+# Claude HUD Enhanced
 
-A Claude Code plugin that shows what's happening — context usage, active tools, running agents, and todo progress. Always visible below your input.
+Claude Code 插件，实时显示会话状态 — 上下文使用率、工具活动、运行中的代理、待办进度和 API 配置。始终显示在输入框下方。
+
+基于 [claude-hud](https://github.com/jarrodwatts/claude-hud) 的增强版本，新增 API 环境监控和用量追踪功能。
 
 [![License](https://img.shields.io/github/license/jarrodwatts/claude-hud?v=2)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/jarrodwatts/claude-hud)](https://github.com/jarrodwatts/claude-hud/stargazers)
 
-![Claude HUD in action](claude-hud-preview-5-2.png)
+![Claude HUD 运行效果](claude-hud-preview-5-2.png)
 
-## Install
+## 安装
 
-Inside a Claude Code instance, run the following commands:
+在 Claude Code 中运行以下命令：
 
-**Step 1: Add the marketplace**
+**步骤 1：从 GitHub 安装**
 ```
-/plugin marketplace add jarrodwatts/claude-hud
-```
-
-**Step 2: Install the plugin**
-
-<details>
-<summary><strong>⚠️ Linux users: Click here first</strong></summary>
-
-On Linux, `/tmp` is often a separate filesystem (tmpfs), which causes plugin installation to fail with:
-```
-EXDEV: cross-device link not permitted
+claude plugin install https://github.com/MarssZ/claude-hud-enhanced
 ```
 
-**Fix**: Set TMPDIR before installing:
+或者本地开发安装：
 ```bash
-mkdir -p ~/.cache/tmp && TMPDIR=~/.cache/tmp claude
+git clone https://github.com/MarssZ/claude-hud-enhanced
+cd claude-hud-enhanced
+npm install
+npm run build
+claude plugin install .
 ```
 
-Then run the install command below in that session. This is a [Claude Code platform limitation](https://github.com/anthropics/claude-code/issues/14799).
-
-</details>
-
+**步骤 2：配置状态栏**
 ```
-/plugin install claude-hud
+/claude-hud-enhanced:setup
 ```
 
-**Step 3: Configure the statusline**
-```
-/claude-hud:setup
-```
-
-Done! The HUD appears immediately — no restart needed.
+完成！HUD 会立即显示 — 无需重启。
 
 ---
 
-## What is Claude HUD?
+## Claude HUD Enhanced 是什么？
 
-Claude HUD gives you better insights into what's happening in your Claude Code session.
+Claude HUD Enhanced 让你更好地了解 Claude Code 会话中正在发生的事情。
 
-| What You See | Why It Matters |
-|--------------|----------------|
-| **Project path** | Know which project you're in (configurable 1-3 directory levels) |
-| **Context health** | Know exactly how full your context window is before it's too late |
-| **Tool activity** | Watch Claude read, edit, and search files as it happens |
-| **Agent tracking** | See which subagents are running and what they're doing |
-| **Todo progress** | Track task completion in real-time |
+| 显示内容 | 为什么重要 |
+|---------|-----------|
+| **项目路径** | 知道你在哪个项目中（可配置 1-3 级目录深度） |
+| **上下文健康度** | 在上下文窗口满之前准确了解使用情况 |
+| **工具活动** | 实时观察 Claude 读取、编辑和搜索文件 |
+| **代理追踪** | 查看哪些子代理正在运行以及它们在做什么 |
+| **待办进度** | 实时追踪任务完成情况 |
+| **API 环境** | 监控 Anthropic API 配置状态 |
+| **用量追踪** | 显示 5 小时和 7 天的 API 使用率 |
 
-## What You See
+## 新增功能
 
-### Default (2 lines)
+### API 环境显示
+
+在状态栏中显示你的 Anthropic API 配置：
+
+- `ANTHROPIC_BASE_URL` - 自定义 API 端点
+- `ANTHROPIC_AUTH_TOKEN` - 掩码令牌（显示前 6 位和后 6 位字符）
+- `ANTHROPIC_MODEL` - 模型覆盖设置
+
+**示例输出：**
+```
+URL: https://api.aicodewith.com | Token: sk-acw...d2b583 | Model: claude-opus-4
+```
+
+### 用量追踪
+
+通过 OAuth 集成显示 Anthropic API 使用情况：
+
+- 5 小时使用率（带剩余时间倒计时）
+- 7 天使用率
+- 自动缓存（成功 60 秒，失败 15 秒）
+
+**示例输出：**
+```
+Context █████░░░░░ 45% │ Usage ██░░░░░░░░ 25% (1h 30m / 5h)
+```
+
+### 配置
+
+通过 `~/.claude/plugins/claude-hud-enhanced/config.json` 控制显示：
+
+```json
+{
+  "display": {
+    "showApiEnv": true,
+    "showUsage": true
+  }
+}
+```
+
+设置为 `false` 可隐藏相应信息。
+
+## 显示内容
+
+### 默认显示（2 行）
 ```
 [Opus | Max] │ my-project git:(main*)
 Context █████░░░░░ 45% │ Usage ██░░░░░░░░ 25% (1h 30m / 5h)
 ```
-- **Line 1** — Model, plan name (or `Bedrock`), project path, git branch
-- **Line 2** — Context bar (green → yellow → red) and usage rate limits
+- **第 1 行** — 模型、套餐名称（或 `Bedrock`）、项目路径、git 分支
+- **第 2 行** — 上下文进度条（绿色 → 黄色 → 红色）和用量速率限制
 
-### Optional lines (enable via `/claude-hud:configure`)
+### 可选行（通过 `/claude-hud-enhanced:configure` 启用）
 ```
-◐ Edit: auth.ts | ✓ Read ×3 | ✓ Grep ×2        ← Tools activity
-◐ explore [haiku]: Finding auth code (2m 15s)    ← Agent status
-▸ Fix authentication bug (2/5)                   ← Todo progress
+◐ Edit: auth.ts | ✓ Read ×3 | ✓ Grep ×2        ← 工具活动
+◐ explore [haiku]: Finding auth code (2m 15s)    ← 代理状态
+▸ Fix authentication bug (2/5)                   ← 待办进度
+URL: https://api.aicodewith.com | Token: sk-acw...d2b583  ← API 环境
 ```
 
 ---
 
-## How It Works
+## 工作原理
 
-Claude HUD uses Claude Code's native **statusline API** — no separate window, no tmux required, works in any terminal.
+Claude HUD Enhanced 使用 Claude Code 的原生 **statusline API** — 无需单独窗口，无需 tmux，在任何终端中都能工作。
 
 ```
-Claude Code → stdin JSON → claude-hud → stdout → displayed in your terminal
-           ↘ transcript JSONL (tools, agents, todos)
+Claude Code → stdin JSON → claude-hud-enhanced → stdout → 在终端中显示
+           ↘ transcript JSONL（工具、代理、待办）
+           ↘ OAuth credentials（用量追踪）
 ```
 
-**Key features:**
-- Native token data from Claude Code (not estimated)
-- Parses the transcript for tool/agent activity
-- Updates every ~300ms
+**核心特性：**
+- 来自 Claude Code 的原生令牌数据（非估算）
+- 解析会话记录以获取工具/代理活动
+- 通过 OAuth 获取 API 用量数据
+- 每约 300ms 更新一次
 
 ---
 
-## Configuration
+## 配置
 
-Customize your HUD anytime:
+随时自定义你的 HUD：
 
 ```
-/claude-hud:configure
+/claude-hud-enhanced:configure
 ```
 
-The guided flow walks you through customization — no manual editing needed:
+引导流程会带你完成自定义 — 无需手动编辑：
 
-- **First time setup**: Choose a preset (Full/Essential/Minimal), then fine-tune individual elements
-- **Customize anytime**: Toggle items on/off, adjust git display style, switch layouts
-- **Preview before saving**: See exactly how your HUD will look before committing changes
+- **首次设置**：选择预设（完整/基本/最小），然后微调各个元素
+- **随时自定义**：切换项目开关、调整 git 显示样式、切换布局
+- **保存前预览**：在提交更改前准确查看 HUD 的外观
 
-### Presets
+### 预设
 
-| Preset | What's Shown |
-|--------|--------------|
-| **Full** | Everything enabled — tools, agents, todos, git, usage, duration |
-| **Essential** | Activity lines + git status, minimal info clutter |
-| **Minimal** | Core only — just model name and context bar |
+| 预设 | 显示内容 |
+|------|---------|
+| **完整** | 启用所有功能 — 工具、代理、待办、git、用量、持续时间 |
+| **基本** | 活动行 + git 状态，最少信息干扰 |
+| **最小** | 仅核心 — 只有模型名称和上下文进度条 |
 
-After choosing a preset, you can turn individual elements on or off.
+选择预设后，你可以单独开关各个元素。
 
-### Manual Configuration
+### 手动配置
 
-You can also edit the config file directly at `~/.claude/plugins/claude-hud/config.json`.
+你也可以直接编辑配置文件 `~/.claude/plugins/claude-hud-enhanced/config.json`。
 
-### Options
+### 选项
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `lineLayout` | string | `expanded` | Layout: `expanded` (multi-line) or `compact` (single line) |
-| `pathLevels` | 1-3 | 1 | Directory levels to show in project path |
-| `gitStatus.enabled` | boolean | true | Show git branch in HUD |
-| `gitStatus.showDirty` | boolean | true | Show `*` for uncommitted changes |
-| `gitStatus.showAheadBehind` | boolean | false | Show `↑N ↓N` for ahead/behind remote |
-| `gitStatus.showFileStats` | boolean | false | Show file change counts `!M +A ✘D ?U` |
-| `display.showModel` | boolean | true | Show model name `[Opus]` |
-| `display.showContextBar` | boolean | true | Show visual context bar `████░░░░░░` |
-| `display.contextValue` | `percent` \| `tokens` | `percent` | Context display format (`45%` or `45k/200k`) |
-| `display.showConfigCounts` | boolean | false | Show CLAUDE.md, rules, MCPs, hooks counts |
-| `display.showDuration` | boolean | false | Show session duration `⏱️ 5m` |
-| `display.showSpeed` | boolean | false | Show output token speed `out: 42.1 tok/s` |
-| `display.showUsage` | boolean | true | Show usage limits (Pro/Max/Team only) |
-| `display.usageBarEnabled` | boolean | true | Display usage as visual bar instead of text |
-| `display.sevenDayThreshold` | 0-100 | 80 | Show 7-day usage when >= threshold (0 = always) |
-| `display.showTokenBreakdown` | boolean | true | Show token details at high context (85%+) |
-| `display.showTools` | boolean | false | Show tools activity line |
-| `display.showAgents` | boolean | false | Show agents activity line |
-| `display.showTodos` | boolean | false | Show todos progress line |
+| 选项 | 类型 | 默认值 | 描述 |
+|-----|------|--------|------|
+| `lineLayout` | string | `expanded` | 布局：`expanded`（多行）或 `compact`（单行） |
+| `pathLevels` | 1-3 | 1 | 项目路径显示的目录层级 |
+| `gitStatus.enabled` | boolean | true | 在 HUD 中显示 git 分支 |
+| `gitStatus.showDirty` | boolean | true | 为未提交的更改显示 `*` |
+| `gitStatus.showAheadBehind` | boolean | false | 显示与远程的领先/落后 `↑N ↓N` |
+| `gitStatus.showFileStats` | boolean | false | 显示文件更改计数 `!M +A ✘D ?U` |
+| `display.showModel` | boolean | true | 显示模型名称 `[Opus]` |
+| `display.showContextBar` | boolean | true | 显示可视化上下文进度条 `████░░░░░░` |
+| `display.contextValue` | `percent` \| `tokens` | `percent` | 上下文显示格式（`45%` 或 `45k/200k`） |
+| `display.showConfigCounts` | boolean | false | 显示 CLAUDE.md、规则、MCP、钩子计数 |
+| `display.showDuration` | boolean | false | 显示会话持续时间 `⏱️ 5m` |
+| `display.showSpeed` | boolean | false | 显示输出令牌速度 `out: 42.1 tok/s` |
+| `display.showUsage` | boolean | true | 显示用量限制（仅 Pro/Max/Team） |
+| `display.usageBarEnabled` | boolean | true | 将用量显示为可视化进度条而非文本 |
+| `display.sevenDayThreshold` | 0-100 | 80 | 当 >= 阈值时显示 7 天用量（0 = 始终显示） |
+| `display.showTokenBreakdown` | boolean | true | 在高上下文使用率（85%+）时显示令牌详情 |
+| `display.showTools` | boolean | false | 显示工具活动行 |
+| `display.showAgents` | boolean | false | 显示代理活动行 |
+| `display.showTodos` | boolean | false | 显示待办进度行 |
+| `display.showApiEnv` | boolean | true | 显示 API 环境配置 |
 
-### Usage Limits (Pro/Max/Team)
+### 用量限制（Pro/Max/Team）
 
-Usage display is **enabled by default** for Claude Pro, Max, and Team subscribers. It shows your rate limit consumption on line 2 alongside the context bar.
+用量显示对 Claude Pro、Max 和 Team 订阅用户**默认启用**。它在第 2 行的上下文进度条旁边显示你的速率限制消耗。
 
-The 7-day percentage appears when above the `display.sevenDayThreshold` (default 80%):
+当超过 `display.sevenDayThreshold`（默认 80%）时会显示 7 天百分比：
 
 ```
 Context █████░░░░░ 45% │ Usage ██░░░░░░░░ 25% (1h 30m / 5h) | ██████████ 85% (2d / 7d)
 ```
 
-To disable, set `display.showUsage` to `false`.
+要禁用，将 `display.showUsage` 设置为 `false`。
 
-**Requirements:**
-- Claude Pro, Max, or Team subscription (not available for API users)
-- OAuth credentials from Claude Code (created automatically when you log in)
+**要求：**
+- Claude Pro、Max 或 Team 订阅（API 用户不可用）
+- 来自 Claude Code 的 OAuth 凭证（登录时自动创建）
 
-**Troubleshooting:** If usage doesn't appear:
-- Ensure you're logged in with a Pro/Max/Team account (not API key)
-- Check `display.showUsage` is not set to `false` in config
-- API users see no usage display (they have pay-per-token, not rate limits)
-- AWS Bedrock models display `Bedrock` and hide usage limits (usage is managed in AWS)
+**故障排除：** 如果用量未显示：
+- 确保你使用 Pro/Max/Team 账户登录（而非 API 密钥）
+- 检查配置中的 `display.showUsage` 未设置为 `false`
+- API 用户不显示用量（他们按令牌付费，没有速率限制）
+- AWS Bedrock 模型显示 `Bedrock` 并隐藏用量限制（用量在 AWS 中管理）
 
-### Example Configuration
+### 配置示例
 
 ```json
 {
@@ -186,70 +222,76 @@ To disable, set `display.showUsage` to `false`.
     "showAgents": true,
     "showTodos": true,
     "showConfigCounts": true,
-    "showDuration": true
+    "showDuration": true,
+    "showApiEnv": true,
+    "showUsage": true
   }
 }
 ```
 
-### Display Examples
+### 显示示例
 
-**1 level (default):** `[Opus] │ my-project git:(main)`
+**1 级（默认）：** `[Opus] │ my-project git:(main)`
 
-**2 levels:** `[Opus] │ apps/my-project git:(main)`
+**2 级：** `[Opus] │ apps/my-project git:(main)`
 
-**3 levels:** `[Opus] │ dev/apps/my-project git:(main)`
+**3 级：** `[Opus] │ dev/apps/my-project git:(main)`
 
-**With dirty indicator:** `[Opus] │ my-project git:(main*)`
+**带脏标记：** `[Opus] │ my-project git:(main*)`
 
-**With ahead/behind:** `[Opus] │ my-project git:(main ↑2 ↓1)`
+**带领先/落后：** `[Opus] │ my-project git:(main ↑2 ↓1)`
 
-**With file stats:** `[Opus] │ my-project git:(main* !3 +1 ?2)`
-- `!` = modified files, `+` = added/staged, `✘` = deleted, `?` = untracked
-- Counts of 0 are omitted for cleaner display
+**带文件统计：** `[Opus] │ my-project git:(main* !3 +1 ?2)`
+- `!` = 修改的文件，`+` = 添加/暂存的文件，`✘` = 删除的文件，`?` = 未跟踪的文件
+- 计数为 0 时会省略以保持显示简洁
 
-### Troubleshooting
+### 故障排除
 
-**Config not applying?**
-- Check for JSON syntax errors: invalid JSON silently falls back to defaults
-- Ensure valid values: `pathLevels` must be 1, 2, or 3; `lineLayout` must be `expanded` or `compact`
-- Delete config and run `/claude-hud:configure` to regenerate
+**配置未生效？**
+- 检查 JSON 语法错误：无效的 JSON 会静默回退到默认值
+- 确保值有效：`pathLevels` 必须是 1、2 或 3；`lineLayout` 必须是 `expanded` 或 `compact`
+- 删除配置并运行 `/claude-hud-enhanced:configure` 重新生成
 
-**Git status missing?**
-- Verify you're in a git repository
-- Check `gitStatus.enabled` is not `false` in config
+**Git 状态缺失？**
+- 验证你在 git 仓库中
+- 检查配置中的 `gitStatus.enabled` 未设置为 `false`
 
-**Tool/agent/todo lines missing?**
-- These are hidden by default — enable with `showTools`, `showAgents`, `showTodos` in config
-- They also only appear when there's activity to show
+**工具/代理/待办行缺失？**
+- 这些默认隐藏 — 在配置中使用 `showTools`、`showAgents`、`showTodos` 启用
+- 它们也只在有活动时才显示
+
+**API 环境未显示？**
+- 检查配置中的 `display.showApiEnv` 未设置为 `false`
+- 确保设置了相关环境变量（`ANTHROPIC_BASE_URL`、`ANTHROPIC_AUTH_TOKEN` 或 `ANTHROPIC_MODEL`）
 
 ---
 
-## Requirements
+## 要求
 
 - Claude Code v1.0.80+
-- Node.js 18+ or Bun
+- Node.js 18+ 或 Bun
 
 ---
 
-## Development
+## 开发
 
 ```bash
-git clone https://github.com/jarrodwatts/claude-hud
-cd claude-hud
+git clone https://github.com/MarssZ/claude-hud-enhanced
+cd claude-hud-enhanced
 npm ci && npm run build
 npm test
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献指南。
 
 ---
 
-## License
+## 致谢
 
-MIT — see [LICENSE](LICENSE)
+基于 [claude-hud](https://github.com/jarrodwatts/claude-hud)，由 Jarrod Watts 开发。
 
 ---
 
-## Star History
+## 许可证
 
-[![Star History Chart](https://api.star-history.com/svg?repos=jarrodwatts/claude-hud&type=Date)](https://star-history.com/#jarrodwatts/claude-hud&Date)
+MIT — 查看 [LICENSE](LICENSE)
